@@ -28,10 +28,6 @@ class UpdaterData(BASE):
     updater_id = Column(Integer, primary_key=True)
     user_id = Column(Integer)
 
-    def __init__(self, updater_id, username):
-        self.updater_id = updater_id
-        self.user_id = user_id
-
 
 class UserData(BASE):
     __tablename__ = "user_data"
@@ -62,3 +58,37 @@ def get_user_id(username):
         SESSION.add(user)
         SESSION.commit()
     return user.user_id
+
+
+def get_webhook_id(webhook_url):
+    webhook = SESSION.query(WebhookData).filter(WebhookData.webhook_url == webhook_url).first()
+    if webhook is None:
+        webhook = WebhookData(webhook_url=webhook_url)
+        SESSION.add(webhook)
+        SESSION.commit()
+    return webhook.webhook_id
+
+
+def map_user_webhook(user_id, webhook_id):
+    prev_mapping = SESSION.query(WebhookMapping).filter(WebhookMapping.webhook_id == webhook_id and WebhookMapping.user_id == user_id).first()
+    if prev_mapping is not None:
+        return
+    mapping = WebhookMapping(
+        user_id=user_id,
+    webhook_id=webhook_id,
+    )
+    SESSION.add(mapping)
+    SESSION.commit()
+
+
+def map_user_updater(user_id, updater_id):
+    prev_mapping = SESSION.query(UpdaterData).filter(UpdaterData.user_id == user_id).all()
+    if prev_mapping is not None:
+       [SESSION.delete(i) for i in prev_mapping]
+       SESSION.commit()
+    updater = UpdaterData(
+        user_id=user_id,
+    updater_id=updater_id,
+    )
+    SESSION.add(updater)
+    SESSION.commit()
