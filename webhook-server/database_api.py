@@ -39,7 +39,7 @@ class UserData(BASE):
 class WebhookData(BASE):
     __tablename__ = "webhook_data"
     webhook_id = Column(Integer, primary_key=True)
-    webhook_url = Column (String(200))
+    webhook_url = Column(String(200))
 
 
 class WebhookMapping(BASE):
@@ -54,14 +54,18 @@ BASE.metadata.create_all(ENGINE)
 def get_user_id(username):
     user = SESSION.query(UserData).filter(UserData.username == username).first()
     if user is None:
-        user = UserData(username = username)
+        user = UserData(username=username)
         SESSION.add(user)
         SESSION.commit()
     return user.user_id
 
 
 def get_webhook_id(webhook_url):
-    webhook = SESSION.query(WebhookData).filter(WebhookData.webhook_url == webhook_url).first()
+    webhook = (
+        SESSION.query(WebhookData)
+        .filter(WebhookData.webhook_url == webhook_url)
+        .first()
+    )
     if webhook is None:
         webhook = WebhookData(webhook_url=webhook_url)
         SESSION.add(webhook)
@@ -70,25 +74,44 @@ def get_webhook_id(webhook_url):
 
 
 def map_user_webhook(user_id, webhook_id):
-    prev_mapping = SESSION.query(WebhookMapping).filter(WebhookMapping.webhook_id == webhook_id and WebhookMapping.user_id == user_id).first()
+    prev_mapping = (
+        SESSION.query(WebhookMapping)
+        .filter(
+            WebhookMapping.webhook_id == webhook_id
+            and WebhookMapping.user_id == user_id
+        )
+        .first()
+    )
     if prev_mapping is not None:
         return
     mapping = WebhookMapping(
         user_id=user_id,
-    webhook_id=webhook_id,
+        webhook_id=webhook_id,
     )
     SESSION.add(mapping)
     SESSION.commit()
 
 
 def map_user_updater(user_id, updater_id):
-    prev_mapping = SESSION.query(UpdaterData).filter(UpdaterData.user_id == user_id).all()
+    prev_mapping = (
+        SESSION.query(UpdaterData).filter(UpdaterData.user_id == user_id).all()
+    )
     if prev_mapping is not None:
-       [SESSION.delete(i) for i in prev_mapping]
-       SESSION.commit()
+        [SESSION.delete(i) for i in prev_mapping]
+        SESSION.commit()
     updater = UpdaterData(
         user_id=user_id,
-    updater_id=updater_id,
+        updater_id=updater_id,
     )
     SESSION.add(updater)
     SESSION.commit()
+
+
+def get_webhook_urls(username):
+    return (
+        SESSION.query(WebhookData.webhook_url)
+        .filter(WebhookData.webhook_id == WebhookMapping.webhook_id)
+        .filter(WebhookMapping.webhook_id == UserData.user_id)
+        .filter(UserData.username == username)
+        .all()
+    )
