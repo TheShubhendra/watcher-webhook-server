@@ -6,7 +6,7 @@ from mapper import register_webhook
 async def handler(request):
     if request.path == "/registerWebhook":
         data = await request.json()
-        register_webhook (data["webhook_url"], data["username"])
+        register_webhook(data["webhook_url"], data["username"])
     return web.Response(text="OK")
 
 
