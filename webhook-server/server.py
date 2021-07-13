@@ -1,12 +1,15 @@
 import asyncio
 from aiohttp import web
 from mapper import register_webhook
-
+from dispatcher import send_update
 
 async def handler(request):
     if request.path == "/registerWebhook":
         data = await request.json()
         register_webhook(data["webhook_url"], data["username"])
+    elif request.path == "/update":
+        data = await request.json()
+        await send_update(data)
     return web.Response(text="OK")
 
 
