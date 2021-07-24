@@ -1,5 +1,5 @@
 import asyncio
-from server import serve
+from .server import serve
 import logging
 
 logging.basicConfig(

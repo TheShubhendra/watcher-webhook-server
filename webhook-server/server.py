@@ -1,7 +1,12 @@
 import asyncio
 from aiohttp import web
-from mapper import register_webhook
-from dispatcher import send_update
+from .mapper import register_webhook
+from .dispatcher import send_update
+from decouple import config
+
+
+PORT = config("PORT", 5000)
+
 
 async def handler(request):
     if request.path == "/registerWebhook":
@@ -17,10 +22,10 @@ async def serve():
     server = web.Server(handler)
     runner = web.ServerRunner(server)
     await runner.setup()
-    site = web.TCPSite(runner, "localhost", 8080)
+    site = web.TCPSite(runner, "localhost", PORT)
     await site.start()
 
-    print("======= Serving on http://127.0.0.1:8080/ ======")
+    print(r"======= Serving on http://127.0.0.1:{PORT}/ ======")
 
 
 if __name__ == "__main__":
