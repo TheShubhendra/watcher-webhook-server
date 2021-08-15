@@ -23,17 +23,33 @@ SESSION = scoped_session(session_factory)
 BASE = declarative_base()
 
 
-class UpdaterData(BASE):
-    __tablename__ = "updater_data"
-    updater_id = Column(Integer, primary_key=True)
-    user_id = Column(Integer)
-
-
 class UserData(BASE):
     __tablename__ = "user_data"
     user_id = Column(Integer, primary_key=True)
     username = Column(String(100))
-    type = Column(String(10))
+    a_count = Column(Integer)
+    f_count = Column(Integer)
+
+    def __init__(
+        self,
+        user_id,
+        username,
+        a_count,
+        f_count,
+    ):
+        self.user_id = user_id
+        self.username = username
+        self.a_count = a_count
+        self.f_count = f_count
+
+    def to_dict(self):
+        dic = {
+            "user_id": self.user_id,
+            "username": self.username,
+            "a_count": self.a_count,
+            "f_count": self.f_count,
+        }
+        return dic
 
 
 class WebhookData(BASE):
@@ -44,8 +60,8 @@ class WebhookData(BASE):
 
 class WebhookMapping(BASE):
     __tablename__ = "webhook_mapping"
-    webhook_id = Column(Integer, primary_key=True)
-    user_id = Column(Integer)
+    user_id = Column(Integer, primary_key=True)
+    webhook_id = Column(Integer)
 
 
 BASE.metadata.create_all(ENGINE)
@@ -92,21 +108,6 @@ def map_user_webhook(user_id, webhook_id):
     SESSION.commit()
 
 
-def map_user_updater(user_id, updater_id):
-    prev_mapping = (
-        SESSION.query(UpdaterData).filter(UpdaterData.user_id == user_id).all()
-    )
-    if prev_mapping is not None:
-        [SESSION.delete(i) for i in prev_mapping]
-        SESSION.commit()
-    updater = UpdaterData(
-        user_id=user_id,
-        updater_id=updater_id,
-    )
-    SESSION.add(updater)
-    SESSION.commit()
-
-
 def get_webhook_urls(username):
     return (
         SESSION.query(WebhookData.webhook_url)
@@ -115,3 +116,7 @@ def get_webhook_urls(username):
         .filter(UserData.username == username)
         .all()
     )
+
+
+def get_all_users():
+    return SESSION.query(UserData).all()

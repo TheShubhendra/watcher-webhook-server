@@ -1,7 +1,5 @@
 import asyncio
 from aiohttp import web
-from .mapper import register_webhook
-from .dispatcher import send_update
 from decouple import config
 
 
@@ -9,6 +7,17 @@ PORT = config("PORT", 5000)
 
 
 async def handler(request):
+    if request.path == "registerUpdater":
+        return web.Response(
+            json="""{
+                "updater_id":5,
+                "users":[
+                    "username":"Shubhendra-Kushwaha-1",
+                    "user_id":5
+                    ]
+                
+            }"""
+        )
     if request.path == "/registerWebhook":
         data = await request.json()
         register_webhook(data["webhook_url"], data["username"])
